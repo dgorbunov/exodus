@@ -40,6 +40,10 @@ but instead provide rough ideas that would work well. Avoid nmap or port scannin
 it short and succint (max 7 entries)
 """
 
+task_system_prompt = """
+Generate a bash commands to complete the following task:
+"""
+
 def main():
     tasks = make_initial_call()
     print(tasks)
