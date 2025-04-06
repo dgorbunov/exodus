@@ -7,20 +7,22 @@
 # Compile all command notes to summarize the effects of the attacks and the security of the system
 
 from pydantic import BaseModel, Field
-from datetime import date
-from enum import Enum
 from typing import List
 from openai import OpenAI
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Making the request
 client = OpenAI(
-    api_key="",
+    api_key=os.getenv("OPENAI_API_KEY"),
     base_url="https://api.x.ai/v1/",
 )
 
 def main():
     response = make_initial_call()
-    print(type(response.tasklist))
+    print(response.tasklist)
     #send_bash_command(response)
     #make_subsequent_calls()
     #compile_notes()
