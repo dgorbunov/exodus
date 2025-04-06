@@ -47,6 +47,7 @@ Generate a bash commands to complete the following task:
 def main():
     tasks = make_initial_call()
     print(tasks)
+    
     for task in tasks:
         make_task_call(task)
 
@@ -59,7 +60,7 @@ def make_initial_call():
         ], 
         response_format=InitialFormattedResponse
     )
-    return completion.choices[0].message.parsed
+    return completion.choices[0].message.parsed.tasklist
 
 def make_task_call(task, 
                     task_context = []):
@@ -80,6 +81,7 @@ def make_task_call(task,
     task_context.append({"role": "assistant", "content": f"Command Run: {completion.bashcommand} Topic: {completion.topic} Log:{completion.log}\n"})
 
     #Send bash command to kali and store response
+    print(f"Running command:\n {completion.bashcommand}")
     response = shell.run_command(completion.bashcommand)
 
     #Add response to task_context
