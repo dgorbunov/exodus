@@ -42,7 +42,7 @@ it short and succint (max 7 entries)
 
 def main():
     tasks = make_initial_call()
-    
+    print(tasks)
     for task in tasks:
         make_task_call(task)
 
