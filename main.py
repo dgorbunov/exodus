@@ -79,7 +79,7 @@ def make_task_call(task, context):
             {"role": "system", "content": initial_system_prompt},
             {"role": "user", "content": "make a directory"},
         ], 
-        response_format=FormattedResponse
+        response_format=TaskFormattedResponse
     )
     return completion.choices[0].message.parsed
 
