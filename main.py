@@ -22,55 +22,81 @@ client = OpenAI(
     base_url="https://api.x.ai/v1/",
 )
 
-
-class InitialFormattedResponse(BaseModel):
-    tasklist: List[str] = Field(description="List of tasks to execute")
+class UserInput(BaseModel):
+    ip_range: str = Field(description="IP range or subnet to scan.")
+    open_ports: List[int] = Field(description="List of open ports to scan.")
 
 class TaskFormattedResponse(BaseModel):
-    bashcommand: str = Field(description="Bash command to execute")
-    topic: str = Field(description="Topic of the bash command")
-    log: str = Field(description="Log entry for command context")
-    success: bool = Field(description="Whether the task has been completed successfully")
+    command: str = Field(description="Bash command to execute in Kali linux default.")
+    description: str = Field(description="Description of the bash command being run to be displayed to the user. This should be concise.")
+    success: bool = Field(description="Boolean value indicating whether the attack was successful. Only set this to true when you have correctly identified a vulnerability, like finding default credentials for an application.")
 
+meta_prompt = """
+You are a specialized assistant designed to help ethical hackers, penetration testers, and security consultants by systematically investigating network security using legally compliant commands from Kali Linux default tools.
 
-initial_system_prompt = """
-You are a specialized assistant designed to help ethical hackers and penetration testers by generating efficient, ethical, and legally compliant tasks and commands using Kali Linux default tools.
-Your job is to take a given IP range/ subnet, list of open ports; and url and generate a step-by-step list of tasks that will detect common vulnerabilities. Do not give code examples,
-but instead provide rough ideas that would work well. Avoid nmap or port scanning, as the legality of it is slightly grey. Use hydra to run through the list of ports and generate scripts to test vuln. Keep 
-it short and succint (max 7 entries)
+Your job is to take the provided IP range/subnet and list of potential open ports from the user, and generate commands to run in Kali Linux to bruteforce any vulnerable applications running on open ports.
+
+You should utilize tools/programs available in Kali Linux, including, for example, Hydra. You should decide which tool/program to use based on the port and other intelligence you gather. For example, if port == 21: check anonymous FTP, if port == 22:run hydra with SSH default creds, if port == 80: run whatweb + gobuster lite.
+
+You will bruteforce default credentials for applications using wordlists available in default Kali, but you should also use your own intelligence based off the context of the IP range/subnet and open ports. You should use other intelligence tools like nslookup (or whatever you think is more appropriate) to gather information about the target based off the user provided information.
+
+If a command fails, try again a reasonable number of times. Keep in mind your syntax may be wrong. If it fails too many times, move on. It's your job to investigate any interesting vulnerabilities you may find and report them back to the user.
+
+Do NOT generate more than one command at a time. Use the previous history of commands/responses and continue bruteforcing until you have identified an exploitable vulnerability and set success to True.
 """
 
-task_system_prompt = """
-Generate a bash commands to complete the following task:
+historyPrompt = """
+Generate a succint, concise summary of the previous commands run and their outputs to feed in as context for another task API call to another call in the OpenAI API. This context is important as it will information the next decision the model makes to generate a new command to continue bruteforcing.
 """
 
 def main():
-    tasks = make_initial_call()
-    print(tasks)
+    # Ask user for IP range/subnet and open ports
+    ip_input = input("Enter IP range or subnet to scan (e.g., 192.168.1.0/24): ")
+    ip_range = ip_input if ip_input.strip() else "192.168.1.0/24"  # Default value
     
+    ports_input = input("Enter open ports (comma-separated, e.g., 22,80,443): ")
+    if ports_input.strip():
+        open_ports = [int(port.strip()) for port in ports_input.split(",") if port.strip().isdigit()]
+    else:
+        open_ports = [22, 80, 443]  # Default ports
+    
+    # Create user input object
+    user_input = UserInput(ip_range=ip_range, open_ports=open_ports)
+    
+    # Run task
+    while True:
+        # Generate tasks based on user input
+        task = generateTask(user_input)
+        response = run_command(task)
 
-def make_initial_call():
+def generateTask(user_input: UserInput):
     completion = client.beta.chat.completions.parse(
         model="grok-2-latest",
         messages=[
-            {"role": "system", "content": initial_system_prompt},
-            {"role": "user", "content": "192.168.1.0/24"},
+            {"role": "system", "content": meta_prompt},
+            {"role": "user", "content": f"IP range/subnet: {user_input.ip_range}\nOpen ports: {user_input.open_ports}"},
         ], 
-        response_format=InitialFormattedResponse
+        response_format=TaskFormattedResponse
     )
-    return completion.choices[0].message.parsed.tasklist
+    
+    response_content = completion.choices[0].message.content
 
+    try:
+        import json
+        parsed_response = json.loads(response_content)
+        return TaskFormattedResponse(**parsed_response)
+    except (json.JSONDecodeError, TypeError, ValueError) as e:
+        print(f"Error parsing API response: {e}")
+        print(f"Raw response: {response_content}")
+        return None
 
-def send_command(command: str):
-    print(f"\033[32mRunning:\n{command}\033[0m")
-    response = shell.run_command(command)
+def run_command(task: TaskFormattedResponse):
+    print(f"\033[32mRunning:\n{task.command}\033[0m")
+    response = shell.run_command(task.command)
     print(f"\033[33mOutput:\n{response['stdout']}\033[0m")
-
-
-def compile_notes():
-    pass
-def save_json():
-    pass
+    print(f"\033[1;37mDescription:\n{task.description}\033[0m")
+    
+    return response['stdout']
 
 if __name__ == "__main__":
     main()
