@@ -18,7 +18,7 @@ import shell
 load_dotenv()
 
 client = OpenAI(
-    api_key="",
+    api_key=os.getenv("OPENAI_API_KEY"),
     base_url="https://api.x.ai/v1/",
 )
 
@@ -27,8 +27,8 @@ Generate bash commands to execute.
 """
 
 def main():
-
     tasks = make_initial_call()
+    
     for task in tasks:
         task_context = ""
         step = 0
