@@ -52,13 +52,16 @@ def compile_notes():
 def save_json():
     pass
     
-# JSON response format
-class FormattedResponse(BaseModel):
+# JSON response formats
+
+class InitialFormattedResponse(BaseModel):
+    tasklist: List[str] = Field(description="List of tasks to execute")
+
+class TaskFormattedResponse(BaseModel):
     bashcommand: str = Field(description="Bash command to execute")
     topic: str = Field(description="Topic of the bash command")
     log: str = Field(description="Log entry for command context")
-    success: bool = Field(description="Success of the command")
-
+    success: bool = Field(description="Whether the task has been completed successfully")
 
 if __name__ == "__main__":
     main()
