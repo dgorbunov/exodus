@@ -11,10 +11,10 @@ from typing import List
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+import shell
 
 load_dotenv()
 
-# Making the request
 client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY"),
     base_url="https://api.x.ai/v1/",
@@ -22,11 +22,12 @@ client = OpenAI(
 
 def main():
     response = make_initial_call()
-    print(response.tasklist)
     #send_bash_command(response)
     #make_subsequent_calls()
     #compile_notes()
     #save_json()
+    for task in response.tasklist:
+        shell.run_command(task)
 
 initial_system_prompt = """
 Generate bash commands to execute. 
