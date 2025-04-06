@@ -20,7 +20,7 @@ client = OpenAI(
 
 def main():
     response = make_initial_call()
-    print(type(response)
+    print(type(response.tasklist))
     #send_bash_command(response)
     #make_subsequent_calls()
     #compile_notes()
@@ -37,7 +37,7 @@ def make_initial_call():
             {"role": "system", "content": initial_system_prompt},
             {"role": "user", "content": "make a directory"},
         ], 
-        response_format=FormattedResponse
+        response_format=InitialFormattedResponse
     )
     return completion.choices[0].message.parsed
 
