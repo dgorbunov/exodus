@@ -13,8 +13,6 @@ from enum import Enum
 from typing import List
 
 
-if __name__ == "__main__":
-    main()
 def main():
     make_initial_call()
     send_bash_command()
@@ -54,4 +52,5 @@ class FormattedResponse(BaseModel):
     topic: str = Field(description="Topic of the bash command")
     log: str = Field(description="Log entry for command context")
     success: bool = Field(description="Success of the command")
-
+if __name__ == "__main__":
+    main()
