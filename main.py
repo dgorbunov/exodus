@@ -44,17 +44,7 @@ def main():
     tasks = make_initial_call()
     
     for task in tasks:
-        task_context = ""
-        step = 0
-        while True:
-            step = make_task_call(task, task_context)
-            task_context+=f"Step {step}: Topic: {step.topic} Log:{step.log}\n"
-            step+=1
-            # shell.run_command(step.bashcommand)
-            
-            if step.success:
-                step=0
-                break
+        make_task_call(task)
 
 def make_initial_call():
     completion = client.beta.chat.completions.parse(
@@ -67,21 +57,34 @@ def make_initial_call():
     )
     return completion.choices[0].message.parsed
 
-def send_bash_command():
-    pass
-def add_more_task_context():
-    pass
+def make_task_call(task, 
+                    task_context = []):
 
-def make_task_call(task, context):
+    if task_context == []:
+        task_context = [
+            {"role": "system", "content": task_system_prompt},
+            {"role": "user", "content": task},
+        ]
+
     completion = client.beta.chat.completions.parse(
         model="grok-2-latest",
-        messages=[
-            {"role": "system", "content": initial_system_prompt},
-            {"role": "user", "content": "make a directory"},
-        ], 
+        messages=task_context,
         response_format=TaskFormattedResponse
-    )
-    return completion.choices[0].message.parsed
+    ).choices[0].message.parsed
+
+    #Add topic and log to task_context
+    task_context.append({"role": "assistant", "content": f"Command Run: {completion.bashcommand} Topic: {completion.topic} Log:{completion.log}\n"})
+
+    #Send bash command to kali and store response
+    response = shell.run_command(completion.bashcommand)
+
+    #Add response to task_context
+    task_context.append({"role": "user", "content": f"Bash Output: {response['stdout']} Exit Code: {response['exit_code']}"})
+
+    if(completion.success):
+        return completion
+    else:
+        return make_task_call(task, task_context)
 
 
 def compile_notes():
