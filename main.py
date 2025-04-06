@@ -11,23 +11,30 @@ from datetime import date
 from enum import Enum
 from typing import List
 from openai import OpenAI
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Making the request
 client = OpenAI(
-    api_key="",
+    api_key=os.environ.get('OPENAI_API_KEY'),
     base_url="https://api.x.ai/v1/",
 )
 
 def main():
     response = make_initial_call()
-    print(type(response.tasklist))
+    print((response.tasklist))
     #send_bash_command(response)
     #make_subsequent_calls()
     #compile_notes()
     #save_json()
 
 initial_system_prompt = """
-Generate bash commands to execute. 
+You are a specialized assistant designed to help ethical hackers and penetration testers by generating efficient, ethical, and legally compliant tasks and commands using Kali Linux default tools.
+Your job is to take a given IP range/ subnet, list of open ports; and url and generate a step-by-step list of tasks that will detect common vulnerabilities. Do not give code examples,
+but instead provide rough ideas that would work well. Avoid nmap or port scanning, as the legality of it is slightly grey. Use hydra to run through the list of ports and generate scripts to test vuln. Keep 
+it short and succint (max 7 entries)
 """
 
 def make_initial_call():
@@ -35,7 +42,7 @@ def make_initial_call():
         model="grok-2-latest",
         messages=[
             {"role": "system", "content": initial_system_prompt},
-            {"role": "user", "content": "make a directory"},
+            {"role": "user", "content": "192.168.1.0/24"},
         ], 
         response_format=InitialFormattedResponse
     )
