@@ -1,2 +1,2 @@
 docker build -t kali .
-docker run --name kali -d -it kali
+docker run --cap-add=NET_ADMIN --name kali -d -it kali
