@@ -36,6 +36,8 @@ def main():
             step = make_task_call(task)
             task_context+=f"Step {step}: Topic: {step.topic} Log:{step.log}\n"
             step+=1
+            # shell.run_command(step.bashcommand)
+            
             if step.success:
                 step=0
                 break
