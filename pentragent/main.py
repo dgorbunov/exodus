@@ -22,6 +22,7 @@ def main():
     compile_notes()
     save_json()
 
+
 def make_initial_call():
     completion = client.Completion.create(
         model="gpt-3.5-turbo",
@@ -51,6 +52,6 @@ def save_json():
 class FormattedResponse(BaseModel):
     bashcommand: str = Field(description="Bash command to execute")
     topic: str = Field(description="Topic of the bash command")
-    response: str = Field(description="Response of the command")
+    log: str = Field(description="Log entry for command context")
     success: bool = Field(description="Success of the command")
 
