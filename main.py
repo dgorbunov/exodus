@@ -48,8 +48,6 @@ def main():
     tasks = make_initial_call()
     print(tasks)
     
-    for task in tasks:
-        make_task_call(task)
 
 def make_initial_call():
     completion = client.beta.chat.completions.parse(
@@ -61,38 +59,6 @@ def make_initial_call():
         response_format=InitialFormattedResponse
     )
     return completion.choices[0].message.parsed.tasklist
-
-def make_task_call(task, 
-                    task_context = []):
-
-    if task_context == []:
-        task_context = [
-            {"role": "system", "content": task_system_prompt},
-            {"role": "user", "content": task},
-        ]
-
-    completion = client.beta.chat.completions.parse(
-        model="grok-2-latest",
-        messages=task_context,
-        response_format=TaskFormattedResponse
-    ).choices[0].message.parsed
-
-    #Add topic and log to task_context
-    task_context.append({"role": "assistant", "content": f"Command Run: {completion.bashcommand} Topic: {completion.topic} Log:{completion.log}\n"})
-
-    #Send bash command to kali and store response
-    print(f"\033[32mRunning:\n{completion.bashcommand}\033[0m")
-    response = shell.run_command(completion.bashcommand)
-    print(f"\033[33mOutput:\n{response['stdout']}\033[0m")
-
-    #Add response to task_context
-    task_context.append({"role": "user", "content": f"Bash Output: {response['stdout']} Exit Code: {response['exit_code']}"})
-
-    if(completion.success):
-        return completion
-    else:
-        return make_task_call(task, task_context)
-
 
 def compile_notes():
     pass
