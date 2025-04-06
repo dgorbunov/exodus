@@ -60,6 +60,13 @@ def make_initial_call():
     )
     return completion.choices[0].message.parsed.tasklist
 
+
+def send_command(command: str):
+    print(f"\033[32mRunning:\n{command}\033[0m")
+    response = shell.run_command(command)
+    print(f"\033[33mOutput:\n{response['stdout']}\033[0m")
+
+
 def compile_notes():
     pass
 def save_json():
