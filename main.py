@@ -31,6 +31,10 @@ class TaskFormattedResponse(BaseModel):
     description: str = Field(description="Description of the bash command being run to be displayed to the user. This should be concise.")
     success: bool = Field(description="Boolean value indicating whether the attack was successful. Only set this to true when you have correctly identified a vulnerability, like finding default credentials for an application.")
 
+class HistoryFormattedResponse(BaseModel):
+    history: str = Field(description = "History of steps taken to pen the target")
+
+
 meta_prompt = """
 You are a specialized assistant designed to help ethical hackers, penetration testers, and security consultants by systematically investigating network security using legally compliant commands from Kali Linux default tools.
 
@@ -45,7 +49,7 @@ If a command fails, try again a reasonable number of times. Keep in mind your sy
 Do NOT generate more than one command at a time. Use the previous history of commands/responses and continue bruteforcing until you have identified an exploitable vulnerability and set success to True.
 """
 
-historyPrompt = """
+history_prompt = """
 Generate a succint, concise summary of the previous commands run and their outputs to feed in as context for another task API call to another call in the OpenAI API. This context is important as it will information the next decision the model makes to generate a new command to continue bruteforcing.
 """
 
@@ -68,6 +72,7 @@ def main():
         # Generate tasks based on user input
         task = generateTask(user_input)
         response = run_command(task)
+
 
 def generateTask(user_input: UserInput):
     completion = client.beta.chat.completions.parse(
@@ -97,6 +102,20 @@ def run_command(task: TaskFormattedResponse):
     print(f"\033[1;37mDescription:\n{task.description}\033[0m")
     
     return response['stdout']
+
+
+def make_history_call(stdout: str):
+    completion = client.beta.chat.completions.parse(
+            model = "grok-2-latest",
+            messages=[
+                {"role": "system", "content": history_prompt},
+                {"role": "user", "content": stdout}
+            ],
+            response_format = HistoryFormattedResponse
+    )
+    return completion.choices[0].message.parsed
+
+
 
 if __name__ == "__main__":
     main()
