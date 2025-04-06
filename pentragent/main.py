@@ -11,12 +11,8 @@ from datetime import date
 from enum import Enum
 from typing import List
 from openai import OpenAI
-import os
-from dotenv import load_dotenv
-import shell
 
-load_dotenv()
-
+# Making the request
 client = OpenAI(
     api_key="",
     base_url="https://api.x.ai/v1/",
