@@ -81,8 +81,9 @@ def make_task_call(task,
     task_context.append({"role": "assistant", "content": f"Command Run: {completion.bashcommand} Topic: {completion.topic} Log:{completion.log}\n"})
 
     #Send bash command to kali and store response
-    print(f"Running command:\n {completion.bashcommand}")
+    print(f"\033[32mRunning:\n{completion.bashcommand}\033[0m")
     response = shell.run_command(completion.bashcommand)
+    print(f"\033[33mOutput:\n{response['stdout']}\033[0m")
 
     #Add response to task_context
     task_context.append({"role": "user", "content": f"Bash Output: {response['stdout']} Exit Code: {response['exit_code']}"})
@@ -97,9 +98,6 @@ def compile_notes():
     pass
 def save_json():
     pass
-    
-# JSON response formats
-
 
 if __name__ == "__main__":
     main()
