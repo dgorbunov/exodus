@@ -83,7 +83,7 @@ def main():
         task = generate_task(user_input, history)
         response = run_command(task)
         history = make_history_call(history, response[0], response[1]).history
-        print(f"\033[31mHistory:\n{history}\033[0m")
+        # print(f"\033[31mHistory:\n{history}\033[0m")
         
         if task.success:
             print(f"🚨🚨🚨🚨")
