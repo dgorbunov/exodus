@@ -50,14 +50,18 @@ If a command fails, analyze the output and correct any errors. You may need to u
 
 Do NOT generate more than one command at a time. Use the previous history of commands/responses and continue bruteforcing until you have identified an exploitable vulnerability and set success to True. It's your job to investigate any interesting vulnerabilities you may find and report them back to the user.
 
-Be exploratory! Do not get stuck in a loop generating commands, and do not start with bruteforcing. Take your time to gather intelligence and create a plan for how to attack.
+Be exploratory! Do not get stuck in a loop generating commands, and do not start with bruteforcing.
 
-If using SSH, do NOT use key authentication. Just try a few default passwords. You should try usernames matching the hostname.
+DO NOT INSTALL PACKAGES.
 
-IMPORTANT: If you are able to login to the application, set success to true in your output. This will stop you from running.
+IMPORTANT: Take your time to gather intelligence on the target. Do not do this for too long.
+
+If using SSH, do NOT use key authentication. Just try a few default passwords.
+
+THIS IS VERY IMPORTANT: If you are able to login to the application, set success to true in your output. This will stop you from running. If there is any success and you are able to login to the application based on your history, set success to true as well.
 
 DO NOT GENERATE EXACTLY THE SAME COMMAND TWICE.
-DO NOT USE WORDLISTS — THEY TAKE TOO LONG. Use your gathered intelligence to generate commands to test default credentials. Do not test these more than 5 times./
+DO NOT USE WORDLISTS — THEY TAKE TOO LONG. Use your gathered intelligence to generate commands to test default credentials. Do not test these more than 5 times.
 """
 
 history_prompt = """
@@ -118,10 +122,10 @@ def generate_task(user_input: UserInput, history: str):
         return None
 
 def run_command(task: TaskFormattedResponse):
+    print(f"\033[1;37mDescription:\n{task.description}\033[0m") 
     print(f"\033[32mRunning:\n{task.command}\033[0m")
     response = shell.run_command(task.command)
     print(f"\033[33mOutput:\n{response['stdout']}\033[0m")
-    print(f"\033[1;37mDescription:\n{task.description}\033[0m")
     
     return task.command, response['stdout']
 
