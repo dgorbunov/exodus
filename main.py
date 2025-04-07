@@ -42,7 +42,7 @@ Your job is to take the provided IP range/subnet and list of potential open port
 
 You should utilize tools/programs available in Kali Linux, including, for example, Hydra. You should decide which tool/program to use based on the port and other intelligence you gather. For example, if port == 21: check anonymous FTP, if port == 22:run hydra with SSH default creds, if port == 80: run whatweb + gobuster lite.
 
-Do NOT run commands that take a long time to run like nmap or dirb, whatweb, or nc. It's important that you only run commands that will yield results quickly.
+Do NOT run commands that take a long time to run like nmap or dirb, whatweb, or nc. Do not use the ssh command, use hydra instead. It's important that you only run commands that will yield results quickly.
 
 You will bruteforce default credentials for applications using wordlists available in default Kali, but you should also use your own intelligence based off the context of the IP range/subnet and open ports. You should use other intelligence tools like nslookup (or whatever you think is more appropriate) to gather information about the target based off the user provided information.
 
@@ -52,9 +52,9 @@ Do NOT generate more than one command at a time. Use the previous history of com
 
 Be exploratory! Do not get stuck in a loop generating commands, and do not start with bruteforcing.
 
-DO NOT INSTALL PACKAGES.
+DO NOT INSTALL PACKAGES. You should not
 
-IMPORTANT: Take your time to gather intelligence on the target. Do not do this for too long.
+IMPORTANT: Take your time to gather intelligence on the target.
 
 If using SSH, do NOT use key authentication. Just try a few default passwords.
 
@@ -67,7 +67,7 @@ DO NOT USE WORDLISTS — THEY TAKE TOO LONG. Use your gathered intelligence to 
 history_prompt = """
 Generate a summary of the previous commands run and their outputs to feed in as context for another task API call to another call in the OpenAI API. This context is important as it will information the next decision the model makes to generate a new command to continue bruteforcing.
 
-Do NOT summarize warnings. Direct the model to continue based on the instructions in the metaprompt.
+Do NOT summarize warnings. Direct the model to continue based on the instructions in the metaprompt. If the model succesfully found a vulnerability, finding a valid password, or any other successful action, direct the model to set success to True.
 """
 
 def main():
@@ -91,13 +91,13 @@ def main():
         task = generate_task(user_input, history)
        
         if task.success:
-            print(f"🚨🚨🚨🚨")
+            print(f"\n🚨🚨🚨🚨")
             print(f"\033[1;32mExploitable vulnerability found!\033[0m")
             break 
 
         response = run_command(task)
         history = make_history_call(history, response[0], response[1]).history
-        # print(f"\033[31mHistory:\n{history}\033[0m")
+        print(f"\033[31mHistory:\n{history}\033[0m")
  
 
 def generate_task(user_input: UserInput, history: str):
@@ -122,7 +122,7 @@ def generate_task(user_input: UserInput, history: str):
         return None
 
 def run_command(task: TaskFormattedResponse):
-    print(f"\033[1;37mDescription:\n{task.description}\033[0m") 
+    print(f"\033[1;37m\n{task.description}\033[0m") 
     print(f"\033[32mRunning:\n{task.command}\033[0m")
     response = shell.run_command(task.command)
     print(f"\033[33mOutput:\n{response['stdout']}\033[0m")
