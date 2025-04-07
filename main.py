@@ -29,7 +29,7 @@ class UserInput(BaseModel):
 class TaskFormattedResponse(BaseModel):
     command: str = Field(description="Bash command to execute in Kali linux default.")
     description: str = Field(description="Description of the bash command being run to be displayed to the user. This should be concise.")
-    success: bool = Field(description="Boolean value indicating whether the attack was successful. Only set this to true when you have correctly identified a vulnerability, like finding default credentials for an application.")
+    success: bool = Field(description="Boolean value indicating whether the attack was successful. Only set this to true when you have correctly identified a vulnerability, like succesfully logging into an application like SSH.")
 
 class HistoryFormattedResponse(BaseModel):
     history: str = Field(description = "History of steps taken to pen the target")
@@ -42,7 +42,7 @@ Your job is to take the provided IP range/subnet and list of potential open port
 
 You should utilize tools/programs available in Kali Linux, including, for example, Hydra. You should decide which tool/program to use based on the port and other intelligence you gather. For example, if port == 21: check anonymous FTP, if port == 22:run hydra with SSH default creds, if port == 80: run whatweb + gobuster lite.
 
-Do NOT run commands that take a long time to run like nmap or dirb or whatweb. It's important that you only run commands that will yield results quickly.
+Do NOT run commands that take a long time to run like nmap or dirb, whatweb, or nc. It's important that you only run commands that will yield results quickly.
 
 You will bruteforce default credentials for applications using wordlists available in default Kali, but you should also use your own intelligence based off the context of the IP range/subnet and open ports. You should use other intelligence tools like nslookup (or whatever you think is more appropriate) to gather information about the target based off the user provided information.
 
@@ -52,8 +52,12 @@ Do NOT generate more than one command at a time. Use the previous history of com
 
 Be exploratory! Do not get stuck in a loop generating commands, and do not start with bruteforcing. Take your time to gather intelligence and create a plan for how to attack.
 
+If using SSH, do NOT use key authentication. Just try a few default passwords. You should try usernames matching the hostname.
+
+IMPORTANT: If you are able to login to the application, set success to true in your output. This will stop you from running.
+
 DO NOT GENERATE EXACTLY THE SAME COMMAND TWICE.
-DO NOT USE WORDLISTS — THEY TAKE TOO LONG. Use your gathered intelligence to generate commands to test default credentials. Do not test these more than 5 times.
+DO NOT USE WORDLISTS — THEY TAKE TOO LONG. Use your gathered intelligence to generate commands to test default credentials. Do not test these more than 5 times./
 """
 
 history_prompt = """
@@ -71,7 +75,7 @@ def main():
     if ports_input.strip():
         open_ports = [int(port.strip()) for port in ports_input.split(",") if port.strip().isdigit()]
     else:
-        open_ports = [22, 25565]  # Default ports
+        open_ports = [22]  # Default ports
     
     # Create user input object
     user_input = UserInput(ip_range=ip_range, open_ports=open_ports)
@@ -81,14 +85,16 @@ def main():
     while True:
         # Generate tasks based on user input
         task = generate_task(user_input, history)
-        response = run_command(task)
-        history = make_history_call(history, response[0], response[1]).history
-        # print(f"\033[31mHistory:\n{history}\033[0m")
-        
+       
         if task.success:
             print(f"🚨🚨🚨🚨")
             print(f"\033[1;32mExploitable vulnerability found!\033[0m")
-            break
+            break 
+
+        response = run_command(task)
+        history = make_history_call(history, response[0], response[1]).history
+        # print(f"\033[31mHistory:\n{history}\033[0m")
+ 
 
 def generate_task(user_input: UserInput, history: str):
     completion = client.beta.chat.completions.parse(
